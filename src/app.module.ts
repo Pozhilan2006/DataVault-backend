@@ -13,6 +13,11 @@ import { ConfigModule } from '@nestjs/config'
       isGlobal: true,
     }),
     SupabaseModule,
+    AuthModule,
+    FilesModule,
+    ShareModule,
+    AccessModule,
+    TreeModule,
   ],
 })
 export class AppModule {}
