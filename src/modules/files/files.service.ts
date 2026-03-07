@@ -38,12 +38,12 @@ export class FilesService {
     const storagePath = `${ownerId}/${fileId}.${ext}`;
 
     // 1. Upload to Supabase storage
-    const publicUrl = await this.supabaseService.uploadFile(
-      STORAGE_BUCKET,
-      storagePath,
-      file.buffer,
-      file.mimetype,
-    );
+    await this.supabaseService.uploadFile(
+     storagePath,
+     file.buffer,
+     file.mimetype,
+     file.originalname
+    )
 
     // 2. Save file metadata in files table
     const now = new Date().toISOString();

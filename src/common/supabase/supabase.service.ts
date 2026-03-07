@@ -1,88 +1,52 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { Injectable } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 @Injectable()
-export class SupabaseService implements OnModuleInit {
-  private client: SupabaseClient;
+export class SupabaseService {
 
-  onModuleInit() {
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+  private client: SupabaseClient
+  private bucket: string
 
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error(
-        'SUPABASE_URL and SUPABASE_SERVICE_KEY must be defined in environment variables',
-      );
-    }
+  constructor(private configService: ConfigService) {
 
-    this.client = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    });
+    const url = this.configService.get<string>('SUPABASE_URL')
+    const key = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY')
+
+    this.bucket = this.configService.get<string>('SUPABASE_BUCKET')
+
+    this.client = createClient(url, key)
   }
 
   getClient(): SupabaseClient {
-    return this.client;
+    return this.client
   }
-
-  // ─── Database helpers ────────────────────────────────────────────────────────
-
-  async insertOne(table: string, data: Record<string, any>) {
-    const { data: result, error } = await this.client
-      .from(table)
-      .insert(data)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return result;
-  }
-
-  async findOne(table: string, match: Record<string, any>) {
-    const query = this.client.from(table).select('*');
-    for (const [key, value] of Object.entries(match)) {
-      query.eq(key, value);
-    }
-    const { data, error } = await query.single();
-    if (error) throw error;
-    return data;
-  }
-
-  async findMany(table: string, match: Record<string, any>) {
-    const query = this.client.from(table).select('*');
-    for (const [key, value] of Object.entries(match)) {
-      query.eq(key, value);
-    }
-    const { data, error } = await query;
-    if (error) throw error;
-    return data;
-  }
-
-  // ─── Storage helpers ─────────────────────────────────────────────────────────
 
   async uploadFile(
-    bucket: string,
     path: string,
-    fileBuffer: Buffer,
-    mimeType: string,
-  ): Promise<string> {
-    const { error } = await this.client.storage
-      .from(bucket)
-      .upload(path, fileBuffer, {
-        contentType: mimeType,
-        upsert: false,
-      });
+    file: Buffer,
+    mimetype: string,
+    filename: string
+  ) {
 
-    if (error) throw error;
+    const { data, error } = await this.client.storage
+      .from(this.bucket)
+      .upload(path, file, {
+        contentType: mimetype,
+        upsert: false
+      })
 
-    const { data } = this.client.storage.from(bucket).getPublicUrl(path);
-    return data.publicUrl;
+    if (error) throw error
+
+    return data
   }
 
-  getPublicUrl(bucket: string, path: string): string {
-    const { data } = this.client.storage.from(bucket).getPublicUrl(path);
-    return data.publicUrl;
+  getPublicUrl(bucket: string, path: string) {
+
+    const { data } = this.client.storage
+      .from(bucket)
+      .getPublicUrl(path)
+
+    return data.publicUrl
   }
 }
