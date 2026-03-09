@@ -10,7 +10,8 @@ export class ShareService {
 
   async openShareLink(
     token: string,
-    openedBy: string,
+    userId: string,
+    username: string,
   ): Promise<{ fileUrl: string; newShareToken: string }> {
     const client = this.supabaseService.getClient();
 
@@ -58,7 +59,8 @@ export class ShareService {
       id: newNodeId,
       file_id: shareLink.file_id,
       parent_node_id: shareLink.parent_node_id,
-      opened_by: openedBy,
+      opened_by_user_id: userId,
+      opened_by_username: username,
       opened_at: now,
       depth,
     });

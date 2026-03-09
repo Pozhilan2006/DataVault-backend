@@ -24,7 +24,8 @@ export class AccessService {
   async createAccessNode(params: {
     fileId: string;
     parentNodeId: string | null;
-    openedBy: string;
+    openedByUserId: string;
+    openedByUsername: string;
     depth: number;
   }) {
     const client = this.supabaseService.getClient();
@@ -36,7 +37,8 @@ export class AccessService {
         id: uuidv4(),
         file_id: params.fileId,
         parent_node_id: params.parentNodeId,
-        opened_by: params.openedBy,
+        opened_by_user_id: params.openedByUserId,
+        opened_by_username: params.openedByUsername,
         opened_at: new Date().toISOString(),
         depth: params.depth,
       })

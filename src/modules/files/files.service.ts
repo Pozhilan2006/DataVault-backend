@@ -24,6 +24,7 @@ export class FilesService {
   async uploadFile(
     file: Express.Multer.File,
     ownerId: string,
+    username: string,
   ): Promise<{ fileId: string; shareToken: string; shareUrl: string }> {
     // Validate MIME type
     if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
@@ -61,7 +62,8 @@ export class FilesService {
       id: rootNodeId,
       file_id: fileId,
       parent_node_id: null,
-      opened_by: `owner:${ownerId}`,
+      opened_by_user_id: ownerId,
+      opened_by_username: username,
       opened_at: now,
       depth: 0,
     });
@@ -76,7 +78,8 @@ export class FilesService {
       created_at: now,
     });
 
-    const shareUrl = `/api/share/${shareToken}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+    const shareUrl = `${frontendUrl}/share/${shareToken}`;
 
     return { fileId, shareToken, shareUrl };
   }

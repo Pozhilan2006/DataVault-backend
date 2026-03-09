@@ -36,6 +36,7 @@ export class AuthService {
       .insert({
         id: userId,
         email: dto.email,
+        username: dto.username,
         password_hash: passwordHash,
         created_at: new Date().toISOString(),
       })
@@ -72,12 +73,13 @@ export class AuthService {
     return { token };
   }
 
-  private signToken(user: { id: string; email: string }): string {
+  private signToken(user: { id: string; email: string; username: string }): string {
     const secret = process.env.JWT_SECRET || 'supersecret';
     return jwt.sign(
       {
         sub: user.id,
         email: user.email,
+        username: user.username,
       },
       secret,
       { expiresIn: '7d' },

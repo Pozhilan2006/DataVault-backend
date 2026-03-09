@@ -27,12 +27,12 @@ export class FilesController {
   )
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
-    @CurrentUser() user: { sub: string; email: string },
+    @CurrentUser() user: { sub: string; email: string; username: string },
   ) {
     if (!file) {
       throw new BadRequestException('No file provided');
     }
-    return this.filesService.uploadFile(file, user.sub);
+    return this.filesService.uploadFile(file, user.sub, user.username);
   }
 
   @Get()

@@ -42,8 +42,8 @@ export class TreeService {
       // Build a human-readable label
       const label =
         node.depth === 0
-          ? `Owner (depth 0)`
-          : `${node.opened_by} (depth ${node.depth})`;
+          ? `${node.opened_by_username} (Owner)`
+          : `${node.opened_by_username}`;
 
       nodes.push({
         id: node.id,
