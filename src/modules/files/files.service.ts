@@ -78,7 +78,7 @@ export class FilesService {
       created_at: now,
     });
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://data-vault-frontend-eight.vercel.app';
     const shareUrl = `${frontendUrl}/share/${shareToken}`;
 
     return { fileId, shareToken, shareUrl };
