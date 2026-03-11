@@ -31,6 +31,23 @@ export class AccessService {
     const client = this.supabaseService.getClient();
     const { v4: uuidv4 } = await import('uuid');
 
+    // 1. Check if an identical access record already exists
+    const { data: existingNode } = await client
+      .from('access_nodes')
+      .select('*')
+      .eq('file_id', params.fileId)
+      .eq(
+        params.parentNodeId ? 'parent_node_id' : 'parent_node_id',
+        params.parentNodeId ? params.parentNodeId : null,
+      )
+      .eq('opened_by_user_id', params.openedByUserId)
+      .maybeSingle();
+
+    if (existingNode) {
+      return existingNode;
+    }
+
+    // 2. Insert new access node if it doesn't exist
     const { data, error } = await client
       .from('access_nodes')
       .insert({

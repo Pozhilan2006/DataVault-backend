@@ -51,28 +51,49 @@ export class ShareService {
       }
     }
 
-    // 4. Create new access_nodes record
-    const newNodeId = uuidv4();
-    const now = new Date().toISOString();
+    // 4. Check if this user already has an access node under this parent
+    const { data: existingNode } = await client
+      .from('access_nodes')
+      .select('id')
+      .eq('file_id', shareLink.file_id)
+      .eq(
+        shareLink.parent_node_id ? 'parent_node_id' : 'parent_node_id',
+        shareLink.parent_node_id ? shareLink.parent_node_id : null,
+      )
+      // Supabase .eq() with null directly sometimes has issues, better to use .is() for nulls
+      // but the JS client handles null in .eq() fine by compiling to IS NULL.
+      .eq('opened_by_user_id', userId)
+      .maybeSingle();
 
-    await client.from('access_nodes').insert({
-      id: newNodeId,
-      file_id: shareLink.file_id,
-      parent_node_id: shareLink.parent_node_id,
-      opened_by_user_id: userId,
-      opened_by_username: username,
-      opened_at: now,
-      depth,
-    });
+    let resolvedNodeId: string;
 
-    // 5. Create a new share link for this viewer (so they can reshare)
+    if (existingNode) {
+      resolvedNodeId = existingNode.id;
+    } else {
+      // 5. Create new access_nodes record if it doesn't exist
+      resolvedNodeId = uuidv4();
+      const now = new Date().toISOString();
+
+      await client.from('access_nodes').insert({
+        id: resolvedNodeId,
+        file_id: shareLink.file_id,
+        parent_node_id: shareLink.parent_node_id,
+        opened_by_user_id: userId,
+        opened_by_username: username,
+        opened_at: now,
+        depth,
+      });
+    }
+
+    // 6. Create a new share link for this viewer (so they can reshare)
     const newShareToken = uuidv4();
+    const nowForLink = new Date().toISOString();
     await client.from('share_links').insert({
       id: uuidv4(),
       file_id: shareLink.file_id,
-      parent_node_id: newNodeId,
+      parent_node_id: resolvedNodeId,
       token: newShareToken,
-      created_at: now,
+      created_at: nowForLink,
     });
 
     // 6. Return public URL of the image
